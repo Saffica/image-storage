@@ -10,13 +10,12 @@ package main
 import (
 	"net/http"
 
-	"github.com/Saffica/image-storage/app/internal/img"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	router := gin.Default()
-	handler := img.NewHandler()
+	handler := img.Handler()
 	handler.Register(router)
 
 	server := &http.Server{

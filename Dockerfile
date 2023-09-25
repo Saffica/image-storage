@@ -1,12 +1,12 @@
-FROM golang:1.19
+FROM golang:1.20
 
 # Set destination for COPY
 WORKDIR /app
 
 # Copy the source code. Note the slash at the end, as explained in
 # https://docs.docker.com/engine/reference/builder/#copy
-COPY ./app ./
-
+COPY ./ ./
+RUN go mod download
 # Build
 RUN go build
 
@@ -18,4 +18,4 @@ RUN go build
 EXPOSE 8080
 
 # Run
-CMD ["go", "./image-service"]
+CMD ["go", "run", "main.go"]

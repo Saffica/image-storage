@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Saffica/image-storage/app/internal/handlers"
+	"github.com/Saffica/image-storage/internal/handlers"
 	"github.com/gin-gonic/gin"
 )
 

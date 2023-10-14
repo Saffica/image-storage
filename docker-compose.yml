@@ -1,0 +1,39 @@
+version: '3'
+
+networks:
+    app:
+        driver: bridge
+
+services:
+    backend:
+        build: .
+        container_name: backend
+        ports:
+            - '8080:8080'
+        environment:
+            - MINIO_SERVER_ACCESS_KEY=anyserveraccesskey
+            - MINIO_SERVER_SECRET_KEY=anyserversecretkey
+        networks:
+            - app
+
+    minio:
+        image: quay.io/minio/minio
+        container_name: minio
+        ports:
+            - '9000:9000'
+            - '9090:9090'
+        command: minio server /data --console-address ":9090"
+        environment:
+            - MINIO_ROOT_USER=admin
+            - MINIO_ROOT_PASSWORD=password
+            - MINIO_DEFAULT_BUCKETS=main-bucket
+        volumes:
+            - D:\minio\data:/data
+        networks:
+            - app
+
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+            interval: 30s
+            timeout: 20s
+            retries: 3

@@ -73,6 +73,24 @@ func TestServer(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 	})
+
+	t.Run("getImg image not found error", func(t *testing.T) {
+		router := gin.Default()
+		imgService := &mocmImgServiceImageNotFoundError{}
+		port := 8081
+		baseAddr := fmt.Sprintf("http://localhost:%d", port)
+		s := New(imgService, router)
+		defer s.Stop()
+
+		go func() {
+			err := s.Run(port)
+			require.NoError(t, err)
+		}()
+
+		resp, _, err := doRequest(t, http.MethodGet, fmt.Sprintf("%s/img/1", baseAddr), []byte{})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNotFound, resp.StatusCode)
+	})
 }
 
 func doRequest(
@@ -105,19 +123,25 @@ type mockImgService struct {
 	Data []byte
 }
 
-func (r *mockImgService) GetImgByURL(url string) ([]byte, error) {
+func (r *mockImgService) GetImgByHash(url string) ([]byte, error) {
 	r.URL = url
 	return r.Data, nil
 }
 
 type mockImgServiceBadBase64 struct{}
 
-func (r *mockImgServiceBadBase64) GetImgByURL(url string) ([]byte, error) {
-	return nil, models.ErrBadBase64
+func (r *mockImgServiceBadBase64) GetImgByHash(url string) ([]byte, error) {
+	return nil, models.ErrBadHash
 }
 
 type mockImgServiceInternalServerError struct{}
 
-func (r *mockImgServiceInternalServerError) GetImgByURL(url string) ([]byte, error) {
+func (r *mockImgServiceInternalServerError) GetImgByHash(url string) ([]byte, error) {
 	return nil, errors.New("Chto-to poshlo ne tak")
+}
+
+type mocmImgServiceImageNotFoundError struct{}
+
+func (r *mocmImgServiceImageNotFoundError) GetImgByHash(url string) ([]byte, error) {
+	return nil, models.ErrImageNotFound
 }

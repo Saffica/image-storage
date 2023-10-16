@@ -16,7 +16,7 @@ const (
 )
 
 type imgServiceI interface {
-	GetImgByURL(url string) ([]byte, error)
+	GetImgByHash(url string) ([]byte, error)
 }
 
 type handler struct {
@@ -60,11 +60,17 @@ func (h *handler) Stop() {
 func (h *handler) getImg(c *gin.Context) {
 	// width := c.Query("w")
 	// height := c.Query("h")
-	byteFile, err := h.imgService.GetImgByURL(c.Param("hash"))
-	if errors.Is(err, models.ErrBadBase64) {
+	byteFile, err := h.imgService.GetImgByHash(c.Param("hash"))
+	if errors.Is(err, models.ErrBadHash) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
+
+	if errors.Is(err, models.ErrImageNotFound) {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

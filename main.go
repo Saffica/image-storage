@@ -7,18 +7,14 @@
 
 package main
 
-import (
-	// "log"
-	// "os"
+// "log"
+// "os"
 
-	"log"
-
-	"github.com/Saffica/image-storage/internal/server"
-	"github.com/Saffica/image-storage/internal/usecase"
-	"github.com/Saffica/image-storage/pkg/restclient"
-	"github.com/gin-gonic/gin"
-	// "github.com/minio/minio-go"
-)
+// "github.com/Saffica/image-storage/internal/server"
+// "github.com/Saffica/image-storage/internal/usecase"
+// "github.com/Saffica/image-storage/pkg/restclient"
+// "github.com/gin-gonic/gin"
+// "github.com/minio/minio-go"
 
 func main() {
 	// minioEndpoint := "localhost:9000"
@@ -33,13 +29,13 @@ func main() {
 
 	// minioClient.PutObject()
 	// log.Printf("%#v\n", minioClient)
-	client := restclient.New()
-	imgService := usecase.New(client)
-	router := gin.Default()
+	// client := restclient.New()
+	// imgService := usecase.New(client)
+	// router := gin.Default()
 
-	s := server.New(imgService, router)
-	err := s.Run(8080)
-	if err != nil {
-		log.Panic(err)
-	}
+	// s := server.New(imgService, router)
+	// err := s.Run(8080)
+	// if err != nil {
+	// 	log.Panic(err)
+	// }
 }

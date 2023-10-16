@@ -1,0 +1,15 @@
+mode: set
+github.com/Saffica/image-storage/internal/server/server.go:28.63,33.2 1 1
+github.com/Saffica/image-storage/internal/server/server.go:35.39,43.42 4 1
+github.com/Saffica/image-storage/internal/server/server.go:43.42,45.3 1 1
+github.com/Saffica/image-storage/internal/server/server.go:47.2,47.12 1 0
+github.com/Saffica/image-storage/internal/server/server.go:50.26,54.16 4 1
+github.com/Saffica/image-storage/internal/server/server.go:54.16,56.3 1 0
+github.com/Saffica/image-storage/internal/server/server.go:57.2,57.14 1 1
+github.com/Saffica/image-storage/internal/server/server.go:60.42,64.39 2 1
+github.com/Saffica/image-storage/internal/server/server.go:64.39,67.3 2 1
+github.com/Saffica/image-storage/internal/server/server.go:69.2,69.45 1 1
+github.com/Saffica/image-storage/internal/server/server.go:69.45,72.3 2 1
+github.com/Saffica/image-storage/internal/server/server.go:74.2,74.16 1 1
+github.com/Saffica/image-storage/internal/server/server.go:74.16,77.3 2 1
+github.com/Saffica/image-storage/internal/server/server.go:79.2,81.61 3 1

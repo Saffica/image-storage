@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/Saffica/image-storage/internal/server/server.go (92.3%)</option>
+				<option value="file0">github.com/Saffica/image-storage/internal/server/server.go (93.5%)</option>
 				
 				</select>
 			</div>
@@ -76,6 +76,8 @@ import (
         "errors"
         "fmt"
         "net/http"
+
+        // "strconv"
         "time"
 
         "github.com/Saffica/image-storage/pkg/models"
@@ -87,7 +89,7 @@ const (
 )
 
 type imgServiceI interface {
-        GetImgByHash(url string) ([]byte, error)
+        GetImg(imageRequest *models.ImageRequest) ([]byte, error)
 }
 
 type handler struct {
@@ -129,9 +131,17 @@ func (h *handler) Stop() <span class="cov8" title="1">{
 }
 
 func (h *handler) getImg(c *gin.Context) <span class="cov8" title="1">{
-        // width := c.Query("w")
-        // height := c.Query("h")
-        byteFile, err := h.imgService.GetImgByHash(c.Param("hash"))
+        imgRequest := &amp;models.ImageRequest{
+                Hash: c.Param("hash"),
+        }
+
+        err := c.BindQuery(imgRequest)
+        if err != nil </span><span class="cov8" title="1">{
+                c.AbortWithError(http.StatusBadRequest, fmt.Errorf("%w: %s", models.ErrBadParams, err.Error()))
+                return
+        }</span>
+
+        <span class="cov8" title="1">byteFile, err := h.imgService.GetImg(imgRequest)
         if errors.Is(err, models.ErrBadHash) </span><span class="cov8" title="1">{
                 c.AbortWithError(http.StatusBadRequest, err)
                 return

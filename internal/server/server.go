@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	// "strconv"
 	"time"
 
 	"github.com/Saffica/image-storage/pkg/models"
@@ -16,7 +18,7 @@ const (
 )
 
 type imgServiceI interface {
-	GetImgByHash(url string) ([]byte, error)
+	GetImg(imageRequest *models.ImageRequest) ([]byte, error)
 }
 
 type handler struct {
@@ -58,9 +60,17 @@ func (h *handler) Stop() {
 }
 
 func (h *handler) getImg(c *gin.Context) {
-	// width := c.Query("w")
-	// height := c.Query("h")
-	byteFile, err := h.imgService.GetImgByHash(c.Param("hash"))
+	imgRequest := &models.ImageRequest{
+		Hash: c.Param("hash"),
+	}
+
+	err := c.BindQuery(imgRequest)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("%w: %s", models.ErrBadParams, err.Error()))
+		return
+	}
+
+	byteFile, err := h.imgService.GetImg(imgRequest)
 	if errors.Is(err, models.ErrBadHash) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return

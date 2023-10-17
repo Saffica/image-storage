@@ -29,7 +29,7 @@ type FileRepository interface {
 
 type ImageModifyerService interface {
 	ConvertToWebp(image []byte) ([]byte, error)
-	// Scale(image []byte, weight, heigth int32) ([]byte, error)
+	Scale(image []byte, width, height uint16) ([]byte, error)
 }
 
 type MetaDataRepository interface {
@@ -60,8 +60,8 @@ func New(
 	}
 }
 
-func (s *imgService) GetImgByHash(hash string) ([]byte, error) {
-	validUrl, err := s.validate(hash)
+func (s *imgService) GetImg(imageRequest *models.ImageRequest) ([]byte, error) {
+	validUrl, err := s.validate(imageRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -98,16 +98,25 @@ func (s *imgService) GetImgByHash(hash string) ([]byte, error) {
 		return nil, models.ErrImageNotFound
 	}
 
-	img, err := s.fileRepository.Get(metaData.ID)
+	outputImage, err := s.fileRepository.Get(metaData.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	return img, nil
+	if imageRequest.Width != 0 && imageRequest.Height != 0 {
+		outputImage, err = s.imageModifyerService.Scale(outputImage, imageRequest.Width, imageRequest.Height)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return outputImage, nil
 }
 
-func (s *imgService) validate(hash string) (outputUrl string, err error) {
-	decodedUrl, err := base64.StdEncoding.DecodeString(hash)
+func (s *imgService) validate(imgRequest *models.ImageRequest) (
+	outputUrl string, err error,
+) {
+	decodedUrl, err := base64.StdEncoding.DecodeString(imgRequest.Hash)
 	if err != nil {
 		return "", fmt.Errorf("%w: %s", models.ErrBadHash, err.Error())
 	}
@@ -148,7 +157,7 @@ func (s *imgService) donwloadAndPrepareFile(metaData *models.MetaData) (
 	if err != nil {
 		return nil, err
 	}
-	//TODO обработать ситуацию, когда получаем не изображение
+	//@TODO обработать ситуацию, когда получаем не изображение
 	webpImage, err = s.imageModifyerService.ConvertToWebp(img)
 	if err != nil {
 		return nil, err

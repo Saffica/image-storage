@@ -1,17 +1,5 @@
 package usecase
 
-/*
-1. валидация вх. данных (hash, высота, ширина)
-2. получение метаданных файла из БД (ссылка, ID, дата попытки скачивания, скачан файл или нет)
-3. если запись о файле есть в БД и он не скачан и дата попытки скачивания > суток, выполнить повторную попытку загрузки файла
-4. если в БД нет записи о файле, то создаём запись в БД
-5. конвертация расширения файла
-6. загрузка файла в S3
-7. если запись о файле есть в БД и скачан, то получение файла из S3
-8. приведение размеров файла к запрашиваемым
-9. возврат результата
-*/
-
 import (
 	"encoding/base64"
 	"errors"
@@ -67,26 +55,26 @@ func (s *imgService) GetImg(imageRequest *models.ImageRequest) ([]byte, error) {
 	}
 
 	metaData, err := s.metaDataRepository.Get(validUrl)
-	if errors.Is(err, models.ErrMetaDataNotFound) {
+	switch {
+	case err == nil:
+	case errors.Is(err, models.ErrMetaDataNotFound):
 		metaData = &models.MetaData{
 			DownloadLink: validUrl,
 		}
-		img, err := s.donwloadAndPrepareFile(metaData)
+		img, err := s.downloadAndPrepareFile(metaData)
 		if err != nil {
 			return nil, err
 		}
 
 		return img, nil
-	}
-
-	if err != nil {
+	default:
 		return nil, err
 	}
 
 	day := 24 * time.Hour
 	canDownloadAgain := metaData.UpdatedAt.Add(day).Before(time.Now())
 	if !metaData.Downloaded && canDownloadAgain {
-		img, err := s.donwloadAndPrepareFile(metaData)
+		img, err := s.downloadAndPrepareFile(metaData)
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +117,7 @@ func (s *imgService) validate(imgRequest *models.ImageRequest) (
 	return u.String(), nil
 }
 
-func (s *imgService) donwloadAndPrepareFile(metaData *models.MetaData) (
+func (s *imgService) downloadAndPrepareFile(metaData *models.MetaData) (
 	file []byte, err error,
 ) {
 	var webpImage []byte
@@ -149,7 +137,10 @@ func (s *imgService) donwloadAndPrepareFile(metaData *models.MetaData) (
 			metaData.Downloaded = true
 		}
 
-		_, err = s.metaDataRepository.Update(metaData)
+		_, updateErr := s.metaDataRepository.Update(metaData)
+		if updateErr != nil {
+			err = updateErr
+		}
 
 	}()
 

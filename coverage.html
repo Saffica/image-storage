@@ -57,6 +57,8 @@
 				
 				<option value="file0">github.com/Saffica/image-storage/internal/server/server.go (93.5%)</option>
 				
+				<option value="file1">github.com/Saffica/image-storage/internal/usecase/usecase.go (100.0%)</option>
+				
 				</select>
 			</div>
 			<div id="legend">
@@ -160,6 +162,171 @@ func (h *handler) getImg(c *gin.Context) <span class="cov8" title="1">{
         <span class="cov8" title="1">fmt.Println(byteFile)
         c.Header("Content-Disposition", "attachment; filename=output.webp")
         c.Data(http.StatusOK, "application/octet-stream", byteFile)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package usecase
+
+import (
+        "encoding/base64"
+        "errors"
+        "fmt"
+        "net/url"
+        "time"
+
+        "github.com/Saffica/image-storage/pkg/models"
+)
+
+type FileRepository interface {
+        Get(id int64) ([]byte, error)
+        Insert(id int64, file []byte) error
+}
+
+type ImageModifyerService interface {
+        ConvertToWebp(image []byte) ([]byte, error)
+        Scale(image []byte, width, height uint16) ([]byte, error)
+}
+
+type MetaDataRepository interface {
+        Get(url string) (*models.MetaData, error)
+        Insert(metaData *models.MetaData) (*models.MetaData, error)
+        Update(metaData *models.MetaData) (*models.MetaData, error)
+}
+
+type Client interface {
+        GetImgByURL(url string) ([]byte, error)
+}
+
+type imgService struct {
+        client               Client
+        metaDataRepository   MetaDataRepository
+        imageModifyerService ImageModifyerService
+        fileRepository       FileRepository
+}
+
+func New(
+        client Client, mdRepository MetaDataRepository, imgMService ImageModifyerService, fileRepository FileRepository,
+) *imgService <span class="cov8" title="1">{
+        return &amp;imgService{
+                client:               client,
+                metaDataRepository:   mdRepository,
+                imageModifyerService: imgMService,
+                fileRepository:       fileRepository,
+        }
+}</span>
+
+func (s *imgService) GetImg(imageRequest *models.ImageRequest) ([]byte, error) <span class="cov8" title="1">{
+        validUrl, err := s.validate(imageRequest)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">metaData, err := s.metaDataRepository.Get(validUrl)
+        switch </span>{
+        case err == nil:<span class="cov8" title="1"></span>
+        case errors.Is(err, models.ErrMetaDataNotFound):<span class="cov8" title="1">
+                metaData = &amp;models.MetaData{
+                        DownloadLink: validUrl,
+                }
+                img, err := s.downloadAndPrepareFile(metaData)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+
+                <span class="cov8" title="1">return img, nil</span>
+        default:<span class="cov8" title="1">
+                return nil, err</span>
+        }
+
+        <span class="cov8" title="1">day := 24 * time.Hour
+        canDownloadAgain := metaData.UpdatedAt.Add(day).Before(time.Now())
+        if !metaData.Downloaded &amp;&amp; canDownloadAgain </span><span class="cov8" title="1">{
+                img, err := s.downloadAndPrepareFile(metaData)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+
+                <span class="cov8" title="1">return img, nil</span>
+        }
+
+        <span class="cov8" title="1">if !metaData.Downloaded &amp;&amp; !canDownloadAgain </span><span class="cov8" title="1">{
+                return nil, models.ErrImageNotFound
+        }</span>
+
+        <span class="cov8" title="1">outputImage, err := s.fileRepository.Get(metaData.ID)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">if imageRequest.Width != 0 &amp;&amp; imageRequest.Height != 0 </span><span class="cov8" title="1">{
+                outputImage, err = s.imageModifyerService.Scale(outputImage, imageRequest.Width, imageRequest.Height)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+        }
+
+        <span class="cov8" title="1">return outputImage, nil</span>
+}
+
+func (s *imgService) validate(imgRequest *models.ImageRequest) (
+        outputUrl string, err error,
+) <span class="cov8" title="1">{
+        decodedUrl, err := base64.StdEncoding.DecodeString(imgRequest.Hash)
+        if err != nil </span><span class="cov8" title="1">{
+                return "", fmt.Errorf("%w: %s", models.ErrBadHash, err.Error())
+        }</span>
+
+        <span class="cov8" title="1">u, err := url.ParseRequestURI(string(decodedUrl))
+        if err != nil </span><span class="cov8" title="1">{
+                return "", fmt.Errorf("%w: %s", models.ErrBadHash, err.Error())
+        }</span>
+
+        <span class="cov8" title="1">return u.String(), nil</span>
+}
+
+func (s *imgService) downloadAndPrepareFile(metaData *models.MetaData) (
+        file []byte, err error,
+) <span class="cov8" title="1">{
+        var webpImage []byte
+
+        if metaData.ID == int64(0) </span><span class="cov8" title="1">{
+                metaData, err = s.metaDataRepository.Insert(metaData)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+        }
+
+        <span class="cov8" title="1">defer func() </span><span class="cov8" title="1">{
+                metaData.UpdatedAt = time.Now()
+                if err != nil </span><span class="cov8" title="1">{
+                        metaData.Downloaded = false
+                }</span> else<span class="cov8" title="1"> {
+                        metaData.Downloaded = true
+                }</span>
+
+                <span class="cov8" title="1">_, updateErr := s.metaDataRepository.Update(metaData)
+                if updateErr != nil </span><span class="cov8" title="1">{
+                        err = updateErr
+                }</span>
+
+        }()
+
+        <span class="cov8" title="1">img, err := s.client.GetImgByURL(metaData.DownloadLink)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        //@TODO обработать ситуацию, когда получаем не изображение
+        <span class="cov8" title="1">webpImage, err = s.imageModifyerService.ConvertToWebp(img)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">err = s.fileRepository.Insert(metaData.ID, webpImage)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return webpImage, nil</span>
 }
 </pre>
 		

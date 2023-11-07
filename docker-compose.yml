@@ -1,9 +1,5 @@
 version: '3'
 
-networks:
-    app:
-        driver: bridge
-
 services:
     backend:
         build: .
@@ -13,8 +9,8 @@ services:
         environment:
             - MINIO_SERVER_ACCESS_KEY=anyserveraccesskey
             - MINIO_SERVER_SECRET_KEY=anyserversecretkey
-        networks:
-            - app
+        depends_on:
+            - db
 
     minio:
         image: quay.io/minio/minio
@@ -29,11 +25,18 @@ services:
             - MINIO_DEFAULT_BUCKETS=main-bucket
         volumes:
             - D:\minio\data:/data
-        networks:
-            - app
 
         healthcheck:
             test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
             interval: 30s
             timeout: 20s
             retries: 3
+
+    db:
+        image: postgres:14.2-alpine
+        environment:
+            POSTGRES_DB: img_db
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        ports:
+            - 6433:5432

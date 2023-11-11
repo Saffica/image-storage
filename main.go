@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/Saffica/image-storage/pkg/db"
+	"github.com/Saffica/image-storage/pkg/models"
+	"github.com/Saffica/image-storage/pkg/repository/metadata"
 )
 
 // "log"
@@ -27,6 +32,32 @@ func main() {
 		panic(err)
 	}
 
+	ctx := context.Background()
+
+	metadataRepository := metadata.New(db)
+	metadata, err := metadataRepository.Get(ctx, "test")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(*metadata)
+
+	sMetadata := &models.MetaData{
+		DownloadLink: "s",
+		Downloaded:   true,
+	}
+
+	md, err := metadataRepository.Insert(ctx, sMetadata)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(md)
+
+	md.DownloadLink = "updated_link"
+	md.Downloaded = false
+	md2, err := metadataRepository.Update(ctx, md)
+	fmt.Println(md2)
 	db.Close()
 	// minioEndpoint := "localhost:9000"
 	// accessKeyID := os.Getenv("MINIO_SERVER_ACCESS_KEY")

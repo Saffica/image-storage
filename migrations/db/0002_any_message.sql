@@ -1,5 +1,5 @@
 INSERT INTO
     metadata (download_link)
 VALUES
-    ('/wp-content/uploads/2015/09/beaver-head.png')
+    ('test')
 ---- create above / drop below ----

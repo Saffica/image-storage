@@ -2,6 +2,8 @@ package metadata
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Saffica/image-storage/pkg/models"
@@ -35,6 +37,10 @@ func (r *metaDataRepository) Get(ctx context.Context, url string) (*models.MetaD
 		url,
 	)
 	err := row.Scan(&metadata.ID, &metadata.DownloadLink, &metadata.Downloaded, &metadata.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("%w: %s", models.ErrMetaDataNotFound, err.Error())
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -60,16 +66,23 @@ func (r *metaDataRepository) Insert(ctx context.Context, metadata *models.MetaDa
 
 func (r *metaDataRepository) Update(ctx context.Context, metadata *models.MetaData) (*models.MetaData, error) {
 	now := time.Now()
-	_, err := r.db.Exec(
+	c, err := r.db.Exec(
 		ctx,
-		"UPDATE metadata SET download_link=$1, downloaded=$2, updated_at=$3 WHERE metadata_id=$4",
+		`UPDATE metadata
+		SET download_link=$1, downloaded=$2, updated_at=$3
+		WHERE metadata_id=$4`,
 		metadata.DownloadLink,
 		metadata.Downloaded,
 		now,
 		metadata.ID,
 	)
+
 	if err != nil {
 		return nil, err
+	}
+
+	if c.RowsAffected() == 0 {
+		return nil, models.ErrMetaDataNotFound
 	}
 
 	metadata.UpdatedAt = now

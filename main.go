@@ -1,13 +1,11 @@
 package main
 
-import (
-	"context"
-	"fmt"
+// "context"
+// "fmt"
 
-	"github.com/Saffica/image-storage/pkg/db"
-	"github.com/Saffica/image-storage/pkg/models"
-	"github.com/Saffica/image-storage/pkg/repository/metadata"
-)
+// "github.com/Saffica/image-storage/pkg/db"
+// "github.com/Saffica/image-storage/pkg/models"
+// "github.com/Saffica/image-storage/pkg/repository/metadata"
 
 // "log"
 // "os"
@@ -19,58 +17,62 @@ import (
 // "github.com/minio/minio-go"
 
 func main() {
-	db, err := db.New(
-		"postgres",
-		"postgres",
-		"localhost",
-		"img_db",
-		"./migrations/db",
-		6433,
-	)
+	// db, err := db.New(
+	// 	"postgres",
+	// 	"postgres",
+	// 	"localhost",
+	// 	"img_db",
+	// 	"./migrations/db",
+	// 	6433,
+	// )
 
-	if err != nil {
-		panic(err)
-	}
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	ctx := context.Background()
+	// ctx := context.Background()
 
-	metadataRepository := metadata.New(db)
-	metadata, err := metadataRepository.Get(ctx, "test")
-	if err != nil {
-		panic(err)
-	}
+	// metadataRepository := metadata.New(db)
+	// metadata, err := metadataRepository.Get(ctx, "test")
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	fmt.Println(*metadata)
+	// fmt.Println(*metadata)
 
-	sMetadata := &models.MetaData{
-		DownloadLink: "s",
-		Downloaded:   true,
-	}
+	// sMetadata := &models.MetaData{
+	// 	DownloadLink: "s",
+	// 	Downloaded:   true,
+	// }
 
-	md, err := metadataRepository.Insert(ctx, sMetadata)
-	if err != nil {
-		panic(err)
-	}
+	// md, err := metadataRepository.Insert(ctx, sMetadata)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	fmt.Println(md)
+	// fmt.Println(md)
 
-	md.DownloadLink = "updated_link"
-	md.Downloaded = false
-	md2, err := metadataRepository.Update(ctx, md)
-	fmt.Println(md2)
-	db.Close()
+	// md.DownloadLink = "updated_link"
+	// md.Downloaded = false
+	// md2, err := metadataRepository.Update(ctx, md)
+	// fmt.Println(md2)
+	// db.Close()
+
 	// minioEndpoint := "localhost:9000"
-	// accessKeyID := os.Getenv("MINIO_SERVER_ACCESS_KEY")
-	// secretAccessKey := os.Getenv("MINIO_SERVER_SECRET_KEY")
+	// accessKeyID := "tvkPFzqWyavI2q4hwfE0"
+	// secretAccessKey := "hcNgl4U8nSwU8C0EpenBepd0zIl7o4RUCxEdLknN"
 	// useSSL := false
 
-	// minioClient, err := minio.New(minioEndpoint, accessKeyID, secretAccessKey, useSSL)
+	// fStorage, err := minio.New(minioEndpoint, accessKeyID, secretAccessKey, useSSL)
 	// if err != nil {
 	// 	log.Fatalln(err)
 	// }
 
-	// minioClient.PutObject()
-	// log.Printf("%#v\n", minioClient)
+	// fileRepository := file.New(fStorage)
+	// err = fileRepository.Put(12, []byte("File from application"))
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
 	// client := restclient.New()
 	// imgService := usecase.New(client)
 	// router := gin.Default()

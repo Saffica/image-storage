@@ -16,7 +16,14 @@ type db struct {
 
 const schemaTableName = "schema_version"
 
-func New(dbUser, dbPassword, dbHost, dbName, pathToMigrations string, dbPort uint) (*db, error) {
+func New(
+	dbUser,
+	dbPassword,
+	dbHost,
+	dbName,
+	pathToMigrations string,
+	dbPort uint,
+) (*db, error) {
 	dbUrl := fmt.Sprintf("postgresql://%s:%s@%s:%d/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
 	cfg, err := pgxpool.ParseConfig(dbUrl)
 	if err != nil {

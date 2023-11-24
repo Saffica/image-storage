@@ -41,7 +41,6 @@ func (r *fileRepository) Get(bucketName string, id int64) ([]byte, error) {
 	}
 
 	return b, nil
-
 }
 
 func (r *fileRepository) Put(bucketName string, id int64, file []byte) error {
